@@ -1,25 +1,21 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import MainLayout from './layout/MainLayout';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
-
-function Home() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <h1 className="text-3xl font-bold text-gray-800">EventHub 🎉</h1>
-    </div>
-  );
-}
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
+        <MainLayout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Routes>
+        </MainLayout>
       </BrowserRouter>
     </AuthProvider>
   );
