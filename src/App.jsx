@@ -10,6 +10,7 @@ import Checkout from './pages/Checkout';
 import MyBookings from './pages/MyBookings';
 import TicketView from './pages/TicketView';
 import OrganizerDashboard from './pages/organizer/Dashboard';
+import EventForm from './pages/organizer/EventForm';
 
 function App() {
   return (
@@ -29,6 +30,22 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['organizer']}>
                   <OrganizerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/organizer/events/create"
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <EventForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/organizer/events/:id/edit"
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <EventForm />
                 </ProtectedRoute>
               }
             />
