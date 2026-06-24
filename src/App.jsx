@@ -12,6 +12,7 @@ import TicketView from './pages/TicketView';
 import OrganizerDashboard from './pages/organizer/Dashboard';
 import EventForm from './pages/organizer/EventForm';
 import EventAnalytics from './pages/organizer/EventAnalytics';
+import CheckIn from './pages/staff/CheckIn';
 
 function App() {
   return (
@@ -55,6 +56,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['organizer']}>
                   <EventAnalytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/staff/checkin"
+              element={
+                <ProtectedRoute allowedRoles={['staff']}>
+                  <CheckIn />
                 </ProtectedRoute>
               }
             />
