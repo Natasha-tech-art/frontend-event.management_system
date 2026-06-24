@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ImagePlus, X } from 'lucide-react';
 import api from '../../services/api';
 import Input from '../../components/Input';
 import TextArea from '../../components/TextArea';
@@ -13,6 +14,8 @@ export default function EventForm() {
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [bannerFile, setBannerFile] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -55,6 +58,7 @@ export default function EventForm() {
         ticket_price: event.ticket_price,
         capacity: event.capacity,
       });
+      if (event.banner) setBannerPreview(event.banner);
     } catch (err) {
       console.error(err);
     } finally {
@@ -66,22 +70,44 @@ export default function EventForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleBannerSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setBannerFile(file);
+    setBannerPreview(URL.createObjectURL(file));
+  };
+
+  const removeBanner = () => {
+    setBannerFile(null);
+    setBannerPreview(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSaving(true);
 
-    const payload = {
-      ...formData,
-      start_date: new Date(formData.start_date).toISOString(),
-      end_date: new Date(formData.end_date).toISOString(),
-    };
+    const data = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key === 'start_date' || key === 'end_date') {
+        data.append(key, new Date(value).toISOString());
+      } else {
+        data.append(key, value);
+      }
+    });
+    if (bannerFile) {
+      data.append('banner', bannerFile);
+    }
 
     try {
       if (isEditing) {
-        await api.put(`/events/${id}/update/`, payload);
+        await api.put(`/events/${id}/update/`, data, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
       } else {
-        await api.post('/events/create/', payload);
+        await api.post('/events/create/', data, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
       }
       navigate('/organizer/dashboard');
     } catch (err) {
@@ -100,7 +126,7 @@ export default function EventForm() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">
+      <h1 className="text-2xl font-extrabold text-stage-night mb-1">
         {isEditing ? 'Edit Event' : 'Create New Event'}
       </h1>
       <p className="text-gray-500 mb-6">
@@ -112,6 +138,27 @@ export default function EventForm() {
       )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 p-6">
+        {/* Banner upload */}
+        <label className="block text-sm font-medium text-gray-700 mb-1">Event Banner</label>
+        {bannerPreview ? (
+          <div className="relative mb-4 rounded-xl overflow-hidden aspect-video bg-gray-100">
+            <img src={bannerPreview} alt="Banner preview" className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={removeBanner}
+              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80 transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <label className="mb-4 flex flex-col items-center justify-center gap-2 aspect-video rounded-xl border-2 border-dashed border-gray-300 text-gray-400 hover:border-ticket-violet hover:text-ticket-violet transition cursor-pointer">
+            <ImagePlus className="w-8 h-8" />
+            <span className="text-sm font-medium">Click to upload a banner image</span>
+            <input type="file" accept="image/*" onChange={handleBannerSelect} className="hidden" />
+          </label>
+        )}
+
         <Input
           label="Event Title"
           name="title"
@@ -135,7 +182,7 @@ export default function EventForm() {
             value={formData.category}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ticket-violet"
           >
             <option value="">Select a category</option>
             {categories.map((cat) => (
@@ -202,7 +249,7 @@ export default function EventForm() {
         <button
           type="submit"
           disabled={saving}
-          className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50 mt-2"
+          className="w-full bg-stage-night text-white py-2.5 rounded-lg font-bold hover:bg-ticket-violet transition disabled:opacity-50 mt-2"
         >
           {saving ? 'Saving...' : isEditing ? 'Update Event' : 'Create Event'}
         </button>

@@ -13,6 +13,7 @@ import OrganizerDashboard from './pages/organizer/Dashboard';
 import EventForm from './pages/organizer/EventForm';
 import EventAnalytics from './pages/organizer/EventAnalytics';
 import CheckIn from './pages/staff/CheckIn';
+import AdminDashboard from './pages/admin/Dashboard';
 
 function App() {
   return (
@@ -64,6 +65,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['staff']}>
                   <CheckIn />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />
