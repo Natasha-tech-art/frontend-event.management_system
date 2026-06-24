@@ -11,6 +11,7 @@ import MyBookings from './pages/MyBookings';
 import TicketView from './pages/TicketView';
 import OrganizerDashboard from './pages/organizer/Dashboard';
 import EventForm from './pages/organizer/EventForm';
+import EventAnalytics from './pages/organizer/EventAnalytics';
 
 function App() {
   return (
@@ -46,6 +47,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['organizer']}>
                   <EventForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/organizer/events/:id/analytics"
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <EventAnalytics />
                 </ProtectedRoute>
               }
             />
