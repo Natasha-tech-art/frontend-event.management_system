@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://event-management-platform-jbr3.onrender.com/api/v1'; // Replace with your actual API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
