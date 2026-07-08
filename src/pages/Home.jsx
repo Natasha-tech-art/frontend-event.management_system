@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, MapPin, Calendar as CalendarIcon, Zap, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, MapPin, Calendar as CalendarIcon, Zap, ChevronRight, Ticket, Users, Shield, Star } from 'lucide-react';
 import api from '../services/api';
 import EventCard from '../components/EventCard';
 
@@ -11,43 +11,58 @@ export default function Home() {
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState('');
 
-  useEffect(() => { fetchCategories(); }, []);
-
+  // fetch categories once on mount — no debounce needed
   useEffect(() => {
-    const timeout = setTimeout(() => { fetchEvents(); }, 300);
-    return () => clearTimeout(timeout);
-  }, [search, category, location]);
+    api.get('/events/categories/')
+      .then(res => setCategories(res.data))
+      .catch(err => console.error('Failed to load categories', err));
+  }, []);
 
-  const fetchCategories = async () => {
-    try {
-      const res = await api.get('/events/categories/');
-      setCategories(res.data);
-    } catch (err) { console.error('Failed to load categories', err); }
-  };
-
-  const fetchEvents = async () => {
+  // memoised fetch so it can be reused in debounce and button click
+  const fetchEvents = useCallback(async (params = {}) => {
     setLoading(true);
     try {
+      const res = await api.get('/events/', { params });
+      setEvents(res.data.results || res.data);
+    } catch (err) {
+      console.error('Failed to load events', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // initial load — no debounce on first render
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  // debounced refetch when filters change (skip if all empty — initial load handles that)
+  useEffect(() => {
+    if (!search && !category && !location) return;
+    const timeout = setTimeout(() => {
       const params = {};
       if (search) params.search = search;
       if (category) params.category = category;
       if (location) params.location = location;
-      const res = await api.get('/events/', { params });
-      setEvents(res.data.results || res.data);
-    } catch (err) { console.error('Failed to load events', err); }
-    finally { setLoading(false); }
-  };
+      fetchEvents(params);
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [search, category, location, fetchEvents]);
+
+  // when category filter cleared reset to all events
+  useEffect(() => {
+    if (!search && !category && !location) fetchEvents();
+  }, [category]);
 
   const isFiltered = search || category || location;
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* HERO */}
+
+      {/* ── HERO ── */}
       <div className="relative bg-[#0B0B14] overflow-hidden">
-        {/* Glow orbs */}
-        <div className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-[#FF2E63]/15 rounded-full blur-3xl" />
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#7C3AED]/15 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-1/2 w-[600px] h-48 bg-[#22D3EE]/5 rounded-full blur-3xl" />
+        <div className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-[#FF2E63]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#7C3AED]/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-28 text-center">
           <div className="inline-flex items-center gap-2 bg-[#FF2E63]/10 border border-[#FF2E63]/20 text-[#FF2E63] text-xs font-bold tracking-[0.2em] uppercase px-4 py-2 rounded-full mb-6">
@@ -76,7 +91,6 @@ export default function Home() {
                   className="w-full outline-none text-sm bg-transparent text-gray-800 placeholder-gray-400"
                 />
               </div>
-
               <div className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-50 rounded-xl sm:w-40">
                 <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 <input
@@ -85,7 +99,6 @@ export default function Home() {
                   className="w-full outline-none text-sm bg-transparent text-gray-800 placeholder-gray-400"
                 />
               </div>
-
               <select
                 value={category} onChange={(e) => setCategory(e.target.value)}
                 className="px-4 py-2.5 bg-gray-50 rounded-xl text-sm outline-none text-gray-700 sm:w-40"
@@ -95,9 +108,14 @@ export default function Home() {
                   <option key={cat.id} value={cat.name}>{cat.name}</option>
                 ))}
               </select>
-
               <button
-                onClick={fetchEvents}
+                onClick={() => {
+                  const params = {};
+                  if (search) params.search = search;
+                  if (category) params.category = category;
+                  if (location) params.location = location;
+                  fetchEvents(params);
+                }}
                 className="flex items-center justify-center gap-2 bg-[#FF2E63] hover:bg-[#e0264f] text-white font-semibold px-6 py-2.5 rounded-xl transition shadow-lg shadow-[#FF2E63]/30 text-sm"
               >
                 <Search className="w-4 h-4" />
@@ -108,30 +126,25 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Category pills */}
+      {/* ── CATEGORY PILLS ── */}
       {categories.length > 0 && (
         <div className="bg-white border-b border-gray-100">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-2 overflow-x-auto">
             <button
               onClick={() => setCategory('')}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition ${!category ? 'bg-[#0B0B14] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-            >
-              All
-            </button>
+            >All</button>
             {categories.map((cat) => (
-              <button
-                key={cat.id}
+              <button key={cat.id}
                 onClick={() => setCategory(category === cat.name ? '' : cat.name)}
                 className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition ${category === cat.name ? 'bg-[#FF2E63] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-              >
-                {cat.name}
-              </button>
+              >{cat.name}</button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Events grid */}
+      {/* ── EVENTS GRID ── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -144,11 +157,6 @@ export default function Home() {
               </span>
             )}
           </div>
-          {!isFiltered && (
-            <button className="flex items-center gap-1 text-sm text-[#FF2E63] font-medium hover:underline">
-              View all <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
         </div>
 
         {loading ? (
@@ -179,6 +187,52 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* ── ABOUT US ── */}
+      <div className="bg-[#0B0B14] py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+            {/* Left text */}
+            <div>
+              <div className="inline-flex items-center gap-2 bg-[#FF2E63]/10 border border-[#FF2E63]/20 text-[#FF2E63] text-xs font-bold tracking-[0.2em] uppercase px-4 py-2 rounded-full mb-6">
+                About EventHub
+              </div>
+              <h2 className="font-display text-4xl sm:text-5xl text-white uppercase leading-tight mb-6">
+                Kenya's home for
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#FF2E63] to-[#7C3AED]">
+                  live experiences.
+                </span>
+              </h2>
+              <p className="text-white/50 leading-relaxed mb-4">
+                EventHub was built because no platform existed that truly served local event organizers — one that supported M-Pesa payments, QR check-in, and the full event lifecycle from creation to ticket in your hand.
+              </p>
+              <p className="text-white/50 leading-relaxed">
+                Whether you're attending a sold-out concert or hosting a corporate conference, EventHub connects organizers and audiences in one seamless platform built for Kenya.
+              </p>
+            </div>
+
+            {/* Right feature cards */}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { icon: Ticket, color: '#FF2E63', title: 'Instant Tickets', desc: 'Book and receive your QR ticket in seconds after M-Pesa confirmation.' },
+                { icon: Users, color: '#7C3AED', title: 'For Organizers', desc: 'Create events, manage capacity, and track analytics all in one place.' },
+                { icon: Shield, color: '#22D3EE', title: 'Verified Events', desc: 'Every event is reviewed and approved before going live to the public.' },
+                { icon: Star, color: '#FBBF24', title: 'Reviews & Ratings', desc: 'Attendees leave honest reviews so you always know what to expect.' },
+              ].map(({ icon: Icon, color, title, desc }) => (
+                <div key={title} className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/8 transition">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: `${color}20` }}>
+                    <Icon className="w-5 h-5" style={{ color }} />
+                  </div>
+                  <h3 className="text-white font-bold text-sm mb-1">{title}</h3>
+                  <p className="text-white/40 text-xs leading-relaxed">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
