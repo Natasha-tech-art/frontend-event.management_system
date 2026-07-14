@@ -99,11 +99,5 @@ New events are created in `draft` status and require **admin approval** before a
 
 ---
 
-##  API Documentation
-
-Full interactive API documentation (via `drf-yasg`) is available at `/swagger/` on the running backend.
-
----
-
 ### PROJECT CREATED BY:
    Natasha Bolyn
