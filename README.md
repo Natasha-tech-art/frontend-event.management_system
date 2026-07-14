@@ -5,8 +5,6 @@ A full-stack event management and ticketing platform built for the Kenyan market
 ## A screenshot of the Home Page
 ![Home page](image.png)
 
-**Live demo:** [Frontend](https://frontend-event-management-system.vercel.app) · [Backend API](https://event-management-platform-jbr3.onrender.com) ·
-
 ---
 
 ## Features
@@ -92,10 +90,10 @@ npm run dev
 
 | Role | Capabilities |
 |---|---|
-| **Attendee** | Browse events, book tickets, pay via M-Pesa, view/download tickets, leave reviews |
-| **Organizer** | Create/edit/cancel/delete own events, view own analytics, view bookings for own events |
+| **Attendee** | Browse events, book tickets, pay via M-Pesa, view/download tickets |
+| **Organizer** | Create and edit events, view own analytics, view bookings for own events |
 | **Staff** | Scan/check in attendee QR codes at the door |
-| **Admin** | Approve/reject pending events, delete any event, manage users |
+| **Admin** | Approve pending events and manage users |
 
 New events are created in `draft` status and require **admin approval** before appearing publicly — organizers can no longer self-publish.
 
@@ -106,3 +104,6 @@ New events are created in `draft` status and require **admin approval** before a
 Full interactive API documentation (via `drf-yasg`) is available at `/swagger/` on the running backend.
 
 ---
+
+### PROJECT CREATED BY:
+   Natasha Bolyn
