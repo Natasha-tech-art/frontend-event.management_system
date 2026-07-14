@@ -1,16 +1,108 @@
-# React + Vite
+# EventHub — Event Management & Ticketing Platform 
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack event management and ticketing platform built for the Kenyan market, supporting event creation, ticket booking, M-Pesa payments, QR-code check-in, and role-based dashboards for attendees, organizers, staff, and admins.
 
-Currently, two official plugins are available:
+## A screenshot of the Home Page
+![Home page](image.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Live demo:** [Frontend](https://frontend-event-management-system.vercel.app) · [Backend API](https://event-management-platform-jbr3.onrender.com) ·
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+-  JWT authentication with 4 user roles: **attendee**, **organizer**, **staff**, **admin**
+-  Full event CRUD (create, edit, cancel, delete) with an admin approval workflow
+-  Ticket booking with capacity tracking and QR-code generation
+-  M-Pesa STK Push integration (Safaricom Daraja API) for real payments
+-  Cloudinary-hosted images for event banners
+-  Organizer and admin analytics dashboards (revenue, bookings, monthly trends)
+-  Staff check-in flow via QR code scanning
+-  Real-time notifications via Django Channels (WebSockets)
+-  Fully responsive React frontend styled with Tailwind CSS
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+##  Tech Stack
+
+**Backend**
+- Django 6 + Django REST Framework
+- PostgreSQL (via `dj-database-url`)
+- JWT auth (`djangorestframework-simplejwt`)
+- Django Channels (WebSockets, Redis-backed)
+- Cloudinary (media storage)
+- Safaricom Daraja API (M-Pesa)
+- Deployed on **Render**
+
+**Frontend**
+- React 19 + Vite
+- React Router
+- Axios
+- Tailwind CSS
+- Recharts (analytics charts)
+- `qrcode.react` (ticket QR display)
+- Deployed on **Vercel**
+
+---
+
+
+##  Local Setup
+
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- PostgreSQL running locally (or a hosted Postgres URL)
+
+### Backend
+
+```bash
+cd event-management-platform
+python -m venv venv
+source venv/bin/activate       # Windows: venv\Scripts\activate
+
+pip install -r requirements.txt
+
+# Create your .env file (see Environment Variables below)
+
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+```
+
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## 🚀 Deployment Notes
+
+- **Backend (Render):** auto-deploys from `main`. Build command runs `pip install -r requirements.txt`, `collectstatic`, and `migrate`.
+- **Frontend (Vercel):** auto-deploys from `main`. Requires `vercel.json` at the frontend root with a SPA rewrite rule, or refreshing any non-root route (e.g. `/organizer/dashboard`) will 404.
+- **Media storage:** all image uploads (event banners, profile photos, ticket QR codes) go through Cloudinary via `CloudinaryField` — Render's disk is ephemeral, so local storage would lose files on every redeploy.
+
+---
+
+##  User Roles & Permissions
+
+| Role | Capabilities |
+|---|---|
+| **Attendee** | Browse events, book tickets, pay via M-Pesa, view/download tickets, leave reviews |
+| **Organizer** | Create/edit/cancel/delete own events, view own analytics, view bookings for own events |
+| **Staff** | Scan/check in attendee QR codes at the door |
+| **Admin** | Approve/reject pending events, delete any event, manage users |
+
+New events are created in `draft` status and require **admin approval** before appearing publicly — organizers can no longer self-publish.
+
+---
+
+##  API Documentation
+
+Full interactive API documentation (via `drf-yasg`) is available at `/swagger/` on the running backend.
+
+---
